@@ -1,0 +1,17 @@
+version: '3.1'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        config_file: local.ini
+    volumes:
+    - ./app:/app/app
+    env_file:
+    - env-vars/local.env
+    ports:
+    - "80:80"
+    restart:
+      on-failure
