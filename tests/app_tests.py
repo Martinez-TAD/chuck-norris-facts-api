@@ -27,3 +27,16 @@ class AppTests(unittest.TestCase):
         self.assertEqual(response.status_code, sc.HTTP_200_OK)
         facts = [ChuckNorrisFactDb.parse_obj(fact) for fact in response.json()]
         self.assertEqual(len(facts), 10)
+
+    def test_add_fact(self):
+        response = client.post('/posts/', {"Mon fact a moi"})
+        self.assertEqual(response.status_code, sc.HTTP_200_OK)
+        facts = [ChuckNorrisFactDb.parse_obj(fact) for fact in response.json()]
+        self.assertEqual(len(facts), 1)
+
+    def test_delete_facts(self):
+        response = client.get('/delete/', {"0"})
+        self.assertEqual(response.status_code, sc.HTTP_200_OK)
+        response = client.get('/facts/')
+        facts = [ChuckNorrisFactDb.parse_obj(fact) for fact in response.json()]
+        self.assertEqual(len(facts), 9)

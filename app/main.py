@@ -66,3 +66,48 @@ def get_facts(ids: List[int] = Query(
                             detail=f'Facts with ids {",".join(map(str, ids))} not found')
 
 
+@app.post("/post/", description="Add a new Chuck Fact", response_model=models.ChuckNorrisFactDb, tags=['Facts'])
+def add_fact(fact: models.ChuckNorrisFactBase) -> models.ChuckNorrisFactDb:
+    try:
+        fact_db: Tuple[int, str] = db.insert_fact(fact.fact)
+    except db.ObjectNotFoundError as e:
+        raise HTTPException(
+            status_code=sc.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=sc.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+    if fact_db:
+        return models.ChuckNorrisFactDb(id=fact_db[0], fact=fact_db[1])
+    else:
+        raise HTTPException(
+            status_code=sc.HTTP_404_NOT_FOUND,
+            detail=f"Fact can't be add to the database."
+        )
+
+
+@app.get("/delete/", description="Delete a list of Chuck Fact", response_model=None, tags=['Facts'])
+def delete_facts(fact_ids: List[int] = Query(
+    default=None, title='ids', description='The list of ids to delete'))-> None:
+    try:
+        # Not Verifying fact ids, but loop on good one
+        not_found = []
+        for f in fact_ids:
+            try:
+                db.delete_fact(f)
+            except db.ObjectNotFoundError as e:
+                not_found.append(f)
+        if len(not_found) !=0 :
+            raise HTTPException(
+            status_code=sc.HTTP_404_NOT_FOUND,
+            detail=f"Facts {not_found} was not in the database"
+        )
+
+    except db.ObjectNotFoundError as e:
+        raise HTTPException(
+            status_code=sc.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
